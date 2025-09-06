@@ -321,18 +321,38 @@ function Navbar() {
             children: [
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$client$2f$app$2d$dir$2f$link$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {
                     href: "/",
-                    className: "flex items-center",
-                    children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$image$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {
-                        src: "/logo_sd.png",
-                        alt: "StudyEase Logo",
-                        width: 70,
-                        height: 30
-                    }, void 0, false, {
-                        fileName: "[project]/src/components/navbar.tsx",
-                        lineNumber: 25,
-                        columnNumber: 11
-                    }, this)
-                }, void 0, false, {
+                    className: "flex flex-col items-center",
+                    children: [
+                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$image$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {
+                            src: "/studyease_ai_.png",
+                            alt: "StudyEase Logo",
+                            width: 50,
+                            height: 20
+                        }, void 0, false, {
+                            fileName: "[project]/src/components/navbar.tsx",
+                            lineNumber: 25,
+                            columnNumber: 11
+                        }, this),
+                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                            className: " text-sm font-bold text-black dark:text-white",
+                            children: [
+                                "StudyEase ",
+                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                    className: "text-blue-600 font-bold",
+                                    children: "AI"
+                                }, void 0, false, {
+                                    fileName: "[project]/src/components/navbar.tsx",
+                                    lineNumber: 32,
+                                    columnNumber: 15
+                                }, this)
+                            ]
+                        }, void 0, true, {
+                            fileName: "[project]/src/components/navbar.tsx",
+                            lineNumber: 31,
+                            columnNumber: 11
+                        }, this)
+                    ]
+                }, void 0, true, {
                     fileName: "[project]/src/components/navbar.tsx",
                     lineNumber: 24,
                     columnNumber: 9
@@ -352,19 +372,19 @@ function Navbar() {
                                                 className: "h-4 w-4"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/navbar.tsx",
-                                                lineNumber: 41,
+                                                lineNumber: 44,
                                                 columnNumber: 19
                                             }, this),
                                             "History"
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/navbar.tsx",
-                                        lineNumber: 37,
+                                        lineNumber: 40,
                                         columnNumber: 17
                                     }, this)
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/navbar.tsx",
-                                    lineNumber: 36,
+                                    lineNumber: 39,
                                     columnNumber: 15
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$client$2f$app$2d$dir$2f$link$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {
@@ -377,19 +397,19 @@ function Navbar() {
                                                 className: "h-4 w-4"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/navbar.tsx",
-                                                lineNumber: 51,
+                                                lineNumber: 54,
                                                 columnNumber: 19
                                             }, this),
                                             "Upload"
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/navbar.tsx",
-                                        lineNumber: 47,
+                                        lineNumber: 50,
                                         columnNumber: 17
                                     }, this)
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/navbar.tsx",
-                                    lineNumber: 46,
+                                    lineNumber: 49,
                                     columnNumber: 15
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Button"], {
@@ -401,34 +421,34 @@ function Navbar() {
                                             className: "h-4 w-4"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/navbar.tsx",
-                                            lineNumber: 61,
+                                            lineNumber: 64,
                                             columnNumber: 17
                                         }, this),
                                         "Logout"
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/navbar.tsx",
-                                    lineNumber: 56,
+                                    lineNumber: 59,
                                     columnNumber: 15
                                 }, this)
                             ]
                         }, void 0, true),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                            className: "ml-2 p-1 border-2 border-blue-600 dark:border-blue-400 rounded-full shadow-sm flex items-center justify-center transition-colors duration-200 bg-white dark:bg-black",
+                            className: "ml-2 flex items-center justify-center",
                             children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$theme$2d$toggle$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["ThemeToggle"], {}, void 0, false, {
                                 fileName: "[project]/src/components/navbar.tsx",
-                                lineNumber: 69,
-                                columnNumber: 13
+                                lineNumber: 75,
+                                columnNumber: 3
                             }, this)
                         }, void 0, false, {
                             fileName: "[project]/src/components/navbar.tsx",
-                            lineNumber: 68,
+                            lineNumber: 74,
                             columnNumber: 11
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/src/components/navbar.tsx",
-                    lineNumber: 33,
+                    lineNumber: 36,
                     columnNumber: 9
                 }, this)
             ]
@@ -442,66 +462,7 @@ function Navbar() {
         lineNumber: 21,
         columnNumber: 5
     }, this);
-} // "use client";
- // import { useRouter, usePathname } from "next/navigation";
- // import Link from "next/link";
- // import Image from "next/image";
- // import { LogOut, History, Upload as UploadIcon } from "lucide-react";
- // import { Button } from "@/components/ui/button";
- // import { ThemeToggle } from "@/components/theme-toggle";
- // export function Navbar() {
- //   const router = useRouter();
- //   const pathname = usePathname();
- //   const isPublicPage = ["/login", "/register"].includes(pathname);
- //   const handleLogout = () => {
- //     localStorage.removeItem("user");
- //     router.push("/login");
- //   };
- //   return (
- //     <header className="border-b bg-[#232946] shadow-md">
- //       <div className="container custom-container flex h-16 items-center justify-between">
- //         <Link href="/" className="text-2xl font-bold text-white">
- //           {/* Logo */}
- //           <Image
- //             src="/logo.svg"
- //             alt="StudyEase Logo"
- //             width={280}
- //             height={60}
- //           />
- //         </Link>
- //         <div className="flex items-center gap-6">
- //           {!isPublicPage && (
- //             <>
- //               <Link href="/history">
- //                 <Button variant="ghost" className="flex items-center gap-2 bg-[#7c3aed] hover:bg-[#a78bfa] text-white shadow-md rounded-xl">
- //                   <History className="h-4 w-4" />
- //                   History
- //                 </Button>
- //               </Link>
- //               <Link href="/">
- //                 <Button variant="default" className="flex items-center gap-2 bg-[#7c3aed] hover:bg-[#a78bfa] text-white shadow-md rounded-xl">
- //                   <UploadIcon className="h-4 w-4" />
- //                   Upload
- //                 </Button>
- //               </Link>
- //               <Button
- //                 variant="ghost"
- //                 className="flex items-center gap-2 bg-[#7c3aed] hover:bg-[#a78bfa] text-white shadow-md rounded-xl"
- //                 onClick={handleLogout}
- //               >
- //                 <LogOut className="h-4 w-4" />
- //                 Logout
- //               </Button>
- //             </>
- //           )}
- //           <div className="ml-2 p-1 bg-white border-2 border-[#7c3aed] rounded-full shadow-md flex items-center justify-center transition-colors duration-200">
- //             <ThemeToggle />
- //           </div>
- //         </div>
- //       </div>
- //     </header>
- //   );
- // }
+}
 _s(Navbar, "gA9e4WsoP6a20xDgQgrFkfMP8lc=", false, function() {
     return [
         __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$navigation$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useRouter"],

@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { ArrowLeft, FileText, Youtube, FileIcon, Loader2 } from "lucide-react";
+import { ArrowLeft, FileText, Youtube, File as FileIcon, Loader2 } from "lucide-react";
 
 interface HistoryItem {
   task_id: string;
@@ -79,19 +79,28 @@ export default function HistoryPage() {
   };
 
   return (
-    <div className="min-h-screen bg-white text-black p-6 sm:p-10">
+    <div className="min-h-screen bg-white dark:bg-gray-900 text-black dark:text-white p-6 sm:p-10">
       <div className="max-w-5xl mx-auto">
         {/* Header */}
         <div className="flex items-center gap-4 mb-10">
           <Button
             variant="outline"
-            className="border border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white transition"
             onClick={() => router.back()}
+            className="
+              flex items-center gap-2
+              px-4 py-2 rounded-full
+              border border-blue-600 text-blue-600
+              bg-white dark:bg-gray-800
+              hover:bg-blue-600 hover:text-white
+              transition-colors duration-200
+              shadow-sm hover:shadow-lg
+            "
           >
-            <ArrowLeft className="h-4 w-4 mr-2" />
+            <ArrowLeft className="h-5 w-5" />
             Back
           </Button>
-          <h1 className="text-3xl sm:text-4xl font-bold text-blue-700">
+
+          <h1 className="text-3xl sm:text-4xl font-bold text-blue-700 dark:text-blue-400">
             Processing History
           </h1>
         </div>
@@ -100,12 +109,12 @@ export default function HistoryPage() {
         {loading ? (
           <div className="flex items-center justify-center py-10">
             <Loader2 className="h-6 w-6 animate-spin text-blue-600 mr-2" />
-            <span className="text-blue-700">Loading history...</span>
+            <span className="text-blue-700 dark:text-blue-400">Loading history...</span>
           </div>
         ) : error ? (
           <div className="text-center py-10 text-red-500 font-medium">{error}</div>
         ) : history.length === 0 ? (
-          <div className="text-center py-10 text-gray-500">
+          <div className="text-center py-10 text-gray-500 dark:text-gray-400">
             No processing history available
           </div>
         ) : (
@@ -113,7 +122,7 @@ export default function HistoryPage() {
             {history.map((item) => (
               <Card
                 key={item.task_id}
-                className="p-5 bg-blue-50 border border-blue-200 hover:border-blue-600 hover:shadow-lg hover:shadow-blue-200/40 transition cursor-pointer rounded-xl"
+                className="p-5 bg-blue-50 dark:bg-blue-900 border border-blue-200 dark:border-blue-800 hover:border-blue-600 hover:shadow-lg hover:shadow-blue-200/40 transition cursor-pointer rounded-xl"
                 onClick={() => handleItemClick(item)}
               >
                 <div className="flex items-start gap-4">
@@ -128,7 +137,7 @@ export default function HistoryPage() {
 
                   {/* File info */}
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold text-lg text-black truncate">
+                    <h3 className="font-semibold text-lg text-black dark:text-white truncate">
                       {item.file_info.type === "youtube"
                         ? `YouTube Video: ${
                             item.file_info.url
@@ -137,7 +146,7 @@ export default function HistoryPage() {
                           }`
                         : item.file_info.filename || "Unnamed File"}
                     </h3>
-                    <div className="flex items-center gap-2 text-sm text-gray-600 mt-1">
+                    <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 mt-1">
                       <span className="capitalize">{item.file_info.type}</span>
                       <span>•</span>
                       <span>{formatDate(item.timestamp)}</span>

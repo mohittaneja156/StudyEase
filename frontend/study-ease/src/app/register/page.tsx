@@ -56,14 +56,18 @@ export default function RegisterPage() {
         <div className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-xl border border-gray-200">
           {/* Logo section */}
           <div className="p-8 text-center">
-            <div className="flex justify-center mb-6">
+            <div className="flex flex-col items-center">
               <Image
-  src="/logo_sd.png"
+  src="/studyease_ai_.png"
   alt="Logo"
   width={120}   // reduced width
   height={120}  // reduced height
-  className="mx-auto mb-6"
+   className="mx-auto"
 />
+   <h1 className="mt-2 text-2xl font-bold text-center">
+      <span className="text-black font-bold">StudyEase</span>{" "}
+      <span className="text-blue-800 font-bold">AI</span>
+    </h1>
             </div>
             <h2 className="text-2xl font-bold text-blue-600">
               Create Account

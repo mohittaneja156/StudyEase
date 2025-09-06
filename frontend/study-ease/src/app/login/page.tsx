@@ -43,15 +43,19 @@ export default function LoginPage() {
         <div className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-xl border border-gray-200">
           {/* Logo section */}
           <div className="p-8 text-center">
-            <div className="flex justify-center mb-6">
-              <Image
-                src="/logo_sd.png"
-                alt="StudyEase Logo"
-                width={150}
-                height={40}
-                style={{ padding: "10px" }}
-              />
-            </div>
+            <div className="flex flex-col items-center mb-6">
+        <Image
+          src="/studyease_ai_.png"
+          alt="StudyEase Logo"
+          width={150}
+          height={40}
+          style={{ padding: "10px" }}
+        />
+           <h1 className="mt-2 text-lg font-bold">
+          <span className="text-black">StudyEase</span>{" "}
+          <span className="text-blue-800">AI</span>
+        </h1>
+      </div>
             <h2 className="text-2xl font-bold text-blue-600">
               Welcome Back
             </h2>

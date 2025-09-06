@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect } from "react";
@@ -7,14 +8,12 @@ import {
   File,
   FileText,
   X,
-  Link,
   Loader2,
   Youtube,
   CheckCircle2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -34,7 +33,7 @@ interface UploadProps {
 async function openFileDB() {
   return new Promise<IDBDatabase>((resolve, reject) => {
     const request = window.indexedDB.open("fileDB", 1);
-    request.onupgradeneeded = (event) => {
+    request.onupgradeneeded = () => {
       const db = request.result;
       if (!db.objectStoreNames.contains("files")) {
         db.createObjectStore("files");
@@ -58,19 +57,17 @@ export function Upload({ onTaskIdUpdate }: UploadProps) {
   const [activeTab, setActiveTab] = useState<string>("file");
 
   const simulateProgress = () => {
-    // Simulate upload progress
     setUploadProgress(0);
     const interval = setInterval(() => {
-      setUploadProgress((prevProgress) => {
-        const newProgress = prevProgress + Math.random() * 10;
-        if (newProgress >= 90) {
+      setUploadProgress((prev) => {
+        const next = prev + Math.random() * 10;
+        if (next >= 90) {
           clearInterval(interval);
-          return 90; // We'll set to 100 when the server responds
+          return 90;
         }
-        return newProgress;
+        return next;
       });
     }, 500);
-
     return interval;
   };
 
@@ -80,11 +77,9 @@ export function Upload({ onTaskIdUpdate }: UploadProps) {
       setUploading(true);
       setError(null);
       setUploadStatus("Uploading file...");
-
       const progressInterval = simulateProgress();
 
       const formData = new FormData();
-      // Determine if it's a PDF or video based on file type
       if (file.type === "application/pdf") {
         formData.append("pdf", file);
       } else {
@@ -101,47 +96,35 @@ export function Upload({ onTaskIdUpdate }: UploadProps) {
       clearInterval(progressInterval);
       setUploadProgress(100);
 
-      if (!response.ok) {
-        throw new Error("Upload failed");
-      }
+      if (!response.ok) throw new Error("Upload failed");
 
       const data = await response.json();
       setUploadStatus("Upload successful! Processing file...");
 
-      // store in indexedDB
       const db = await openFileDB();
-      const transaction = db.transaction("files", "readwrite");
-      const store = transaction.objectStore("files");
-      store.put(file, "uploadedFile");
+      const tx = db.transaction("files", "readwrite");
+      tx.objectStore("files").put(file, "uploadedFile");
 
-      // Store the task ID and filename for the processing page
       localStorage.setItem("taskId", data.task_id);
       localStorage.setItem("filename", file.name);
 
-      // Set fileType based on the active tab and file type
       const fileType =
         activeTab === "pdf" || file.type === "application/pdf"
           ? "pdf"
           : "video";
       localStorage.setItem("fileType", fileType);
 
-      // Create a URL for the file
       const fileURL = URL.createObjectURL(file);
       localStorage.setItem("fileURL", fileURL);
-
-      // For PDFs, store the URL in a separate key for the PDF viewer
       if (fileType === "pdf") {
         localStorage.setItem("pdfViewerURL", fileURL);
       }
 
       if (data.task_id) {
         setTaskId(data.task_id);
-        if (onTaskIdUpdate) {
-          onTaskIdUpdate(data.task_id);
-        }
+        onTaskIdUpdate?.(data.task_id);
       }
 
-      // Navigate to processing page after a brief delay to show 100% completion
       setTimeout(() => {
         router.push(`/processing?filename=${encodeURIComponent(file.name)}`);
       }, 500);
@@ -152,98 +135,33 @@ export function Upload({ onTaskIdUpdate }: UploadProps) {
     }
   };
 
-  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    setIsDragging(true);
-  };
-
-  const handleDragLeave = () => {
-    setIsDragging(false);
-  };
-
-  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    setIsDragging(false);
-
-    const droppedFile = e.dataTransfer.files[0];
-    if (
-      droppedFile?.type.startsWith("video/") ||
-      droppedFile?.type === "application/pdf"
-    ) {
-      setFile(droppedFile);
-      // Auto-switch to the correct tab based on file type
-      if (droppedFile.type === "application/pdf") {
-        setActiveTab("pdf");
-      } else if (droppedFile.type.startsWith("video/")) {
-        setActiveTab("file");
-      }
-      setError(null);
-    } else {
-      setError("Please upload a video or PDF file.");
-    }
-  };
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFile = e.target.files?.[0];
-    if (selectedFile) {
-      if (
-        selectedFile.type.startsWith("video/") ||
-        selectedFile.type === "application/pdf"
-      ) {
-        setFile(selectedFile);
-        setError(null);
-      } else {
-        setError("Please select a video or PDF file.");
-      }
-    }
-  };
-
-  const removeFile = () => {
-    setFile(null);
-    setError(null);
-    setUploadStatus("");
-    setUploadProgress(0);
-  };
-
   const handleYoutubeUrlSubmit = async () => {
-    if (!youtubeUrl) {
-      setError("Please enter a YouTube URL");
-      return;
-    }
+    if (!youtubeUrl) return setError("Please enter a YouTube URL");
 
-    // Basic YouTube URL validation
     const youtubeRegex = /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/.+$/;
-    if (!youtubeRegex.test(youtubeUrl)) {
-      setError("Please enter a valid YouTube URL");
-      return;
-    }
+    if (!youtubeRegex.test(youtubeUrl))
+      return setError("Please enter a valid YouTube URL");
 
     try {
       setUploading(true);
       setError(null);
       setUploadStatus("Processing YouTube URL...");
-
       const progressInterval = simulateProgress();
 
       const response = await fetch("http://localhost:5001/youtube", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ url: youtubeUrl }),
       });
 
       clearInterval(progressInterval);
       setUploadProgress(100);
 
-      if (!response.ok) {
-        throw new Error("Failed to process YouTube URL");
-      }
+      if (!response.ok) throw new Error("Failed to process YouTube URL");
 
       const data = await response.json();
       setUploadStatus("YouTube video located! Processing video...");
 
-      // Store the task ID for the processing page
       localStorage.setItem("youtubeUrl", youtubeUrl);
       localStorage.setItem("taskId", data.task_id);
       localStorage.setItem("filename", "YouTube Video");
@@ -251,16 +169,11 @@ export function Upload({ onTaskIdUpdate }: UploadProps) {
 
       if (data.task_id) {
         setTaskId(data.task_id);
-        if (onTaskIdUpdate) {
-          onTaskIdUpdate(data.task_id);
-        }
+        onTaskIdUpdate?.(data.task_id);
       }
 
-      // Navigate to processing page after a brief delay to show 100% completion
       setTimeout(() => {
-        router.push(
-          `/processing?filename=${encodeURIComponent("YouTube Video")}`
-        );
+        router.push(`/processing?filename=${encodeURIComponent("YouTube Video")}`);
       }, 500);
     } catch (err) {
       setError(
@@ -271,495 +184,352 @@ export function Upload({ onTaskIdUpdate }: UploadProps) {
     }
   };
 
-  // Clean up the URL when component unmounts
-  useEffect(() => {
-    return () => {
-      const fileURL = localStorage.getItem("fileURL");
-      if (fileURL) {
-        URL.revokeObjectURL(fileURL);
-      }
-    };
-  }, []);
-
-  const getFileIcon = () => {
-    if (!file) return null;
-
-    if (file.type === "application/pdf") {
-      return <FileText className="w-8 h-8 text-red-500" />;
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0];
+    if (!f) return;
+    if (f.type.startsWith("video/") || f.type === "application/pdf") {
+      setFile(f);
+      setError(null);
     } else {
-      return <File className="w-8 h-8 text-primary" />;
+      setError("Please select a video or PDF file.");
     }
   };
 
-  const getFileSize = () => {
-    if (!file) return "";
-
-    const sizeInMB = (file.size / (1024 * 1024)).toFixed(2);
-    return `${sizeInMB} MB`;
+  const removeFile = () => {
+    setFile(null);
+    setError(null);
+    setUploadStatus("");
+    setUploadProgress(0);
   };
 
-  // return (
-  //   <div className="w-full max-w-3xl mx-auto p-4">
-  //     <Card className="bg-card shadow-lg border-0 overflow-hidden">
-  //       <CardHeader className="bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white p-6">
-  //         <CardTitle className="text-2xl font-bold text-center">
-  //           Upload Study Material
-  //         </CardTitle>
-  //         <CardDescription className="text-white/80 text-center max-w-md mx-auto">
-  //           Transform your lectures and documents into interactive notes. Upload
-  //           a video, PDF, or provide a YouTube URL.
-  //         </CardDescription>
-  //       </CardHeader>
+  useEffect(() => {
+    return () => {
+      const fileURL = localStorage.getItem("fileURL");
+      if (fileURL) URL.revokeObjectURL(fileURL);
+    };
+  }, []);
 
-  //       <CardContent className="p-6">
-  //         <Tabs
-  //           value={activeTab}
-  //           onValueChange={setActiveTab}
-  //           className="w-full"
-  //         >
-  //           <TabsList className="grid w-full grid-cols-3 mb-6 rounded-lg">
-  //             <TabsTrigger
-  //               value="file"
-  //               className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-l-lg"
-  //             >
-  //               <File className="w-4 h-4 mr-2" />
-  //               Video Upload
-  //             </TabsTrigger>
-  //             <TabsTrigger
-  //               value="pdf"
-  //               className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
-  //             >
-  //               <FileText className="w-4 h-4 mr-2" />
-  //               PDF Upload
-  //             </TabsTrigger>
-  //             <TabsTrigger
-  //               value="url"
-  //               className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-r-lg"
-  //             >
-  //               <Youtube className="w-4 h-4 mr-2" />
-  //               YouTube URL
-  //             </TabsTrigger>
-  //           </TabsList>
+  const getFileSize = () =>
+    file ? `${(file.size / (1024 * 1024)).toFixed(2)} MB` : "";
 
-  //           {/* Video Upload Tab */}
-  //           <TabsContent value="file" className="space-y-4">
-  //             <div
-  //               className={cn(
-  //                 "border-2 border-dashed rounded-xl p-10 text-center transition-all duration-200",
-  //                 isDragging
-  //                   ? "border-primary bg-primary/5"
-  //                   : "border-muted-foreground/20",
-  //                 !file &&
-  //                   "hover:border-primary hover:bg-primary/5 cursor-pointer",
-  //                 file && "bg-muted/20"
-  //               )}
-  //               onDragOver={handleDragOver}
-  //               onDragLeave={handleDragLeave}
-  //               onDrop={handleDrop}
-  //               onClick={() =>
-  //                 !file && document.getElementById("file-upload")?.click()
-  //               }
-  //             >
-  //               <input
-  //                 id="file-upload"
-  //                 type="file"
-  //                 accept="video/*"
-  //                 className="hidden"
-  //                 onChange={handleFileChange}
-  //               />
+  return (
+    <div className="w-full max-w-3xl mx-auto p-4">
+      <Card className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border border-blue-100 dark:border-blue-900 transition-colors duration-300 overflow-hidden">
+        <CardHeader className="bg-blue-50 dark:bg-blue-800/20 p-6 transition-colors duration-300">
+          <CardTitle className="text-2xl font-bold text-center text-gray-700 dark:text-gray-200">
+            Upload Study Material
+          </CardTitle>
+          <CardDescription className="text-gray-600 dark:text-gray-400 text-center max-w-md mx-auto">
+            Transform your lectures and documents into interactive notes. Upload
+            a video, PDF, or provide a YouTube URL.
+          </CardDescription>
+        </CardHeader>
 
-  //               {file && activeTab === "file" ? (
-  //                 <div className="flex flex-col items-center justify-center">
-  //                   <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-4">
-  //                     <CheckCircle2 className="w-8 h-8 text-primary" />
-  //                   </div>
-  //                   <h3 className="text-lg font-medium mb-1">Video Selected</h3>
-  //                   <p className="text-sm text-muted-foreground mb-1">
-  //                     {file.name}
-  //                   </p>
-  //                   <p className="text-xs text-muted-foreground/70 mb-4">
-  //                     {getFileSize()}
-  //                   </p>
-  //                   <Button
-  //                     variant="outline"
-  //                     size="sm"
-  //                     onClick={(e) => {
-  //                       e.stopPropagation();
-  //                       removeFile();
-  //                     }}
-  //                     className="rounded-full"
-  //                   >
-  //                     <X className="w-4 h-4 mr-2" />
-  //                     Remove File
-  //                   </Button>
-  //                 </div>
-  //               ) : (
-  //                 <>
-  //                   <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-primary/20 transition-colors">
-  //                     <UploadIcon className="w-10 h-10 text-primary/70" />
-  //                   </div>
-  //                   <h3 className="text-xl font-medium mb-2">
-  //                     Drag & Drop Video
-  //                   </h3>
-  //                   <p className="text-sm text-muted-foreground mb-2">
-  //                     or click to browse files
-  //                   </p>
-  //                   <p className="text-xs text-muted-foreground/70">
-  //                     Supports MP4, WebM, MOV and other video formats
-  //                   </p>
-  //                 </>
-  //               )}
-  //             </div>
+        <CardContent className="p-6">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <TabsList className="grid w-full grid-cols-3 mb-6 rounded-lg border border-blue-100 dark:border-blue-900">
+              <TabsTrigger
+                value="file"
+                className="data-[state=active]:bg-blue-600 data-[state=active]:text-white text-gray-700 dark:text-gray-200 rounded-l-lg transition-colors duration-300"
+              >
+                <File className="w-4 h-4 mr-2" />
+                Video Upload
+              </TabsTrigger>
+              <TabsTrigger
+                value="pdf"
+                className="data-[state=active]:bg-blue-600 data-[state=active]:text-white text-gray-700 dark:text-gray-200 transition-colors duration-300"
+              >
+                <FileText className="w-4 h-4 mr-2" />
+                PDF Upload
+              </TabsTrigger>
+              <TabsTrigger
+                value="url"
+                className="data-[state=active]:bg-blue-600 data-[state=active]:text-white text-gray-700 dark:text-gray-200 rounded-r-lg transition-colors duration-300"
+              >
+                <Youtube className="w-4 h-4 mr-2" />
+                YouTube URL
+              </TabsTrigger>
+            </TabsList>
 
-  //             {uploading && activeTab === "file" && (
-  //               <div className="space-y-3 mt-6">
-  //                 <div className="space-y-2">
-  //                   <div className="flex justify-between text-sm">
-  //                     <span>{uploadStatus}</span>
-  //                     <span>{Math.round(uploadProgress)}%</span>
-  //                   </div>
-  //                   <Progress value={uploadProgress} className="h-2" />
-  //                 </div>
-  //               </div>
-  //             )}
+            {/* Video Upload */}
+            <TabsContent value="file" className="space-y-4">
+              <div
+                className={cn(
+                  "border-2 border-dashed rounded-xl p-10 text-center transition-colors duration-300",
+                  isDragging
+                    ? "border-blue-600 bg-blue-50 dark:bg-blue-800/20"
+                    : "border-blue-200 dark:border-blue-700",
+                  !file &&
+                    "hover:border-blue-600 hover:bg-blue-50 dark:hover:bg-blue-800/20 cursor-pointer",
+                  file && "bg-blue-50 dark:bg-blue-800/10"
+                )}
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  setIsDragging(true);
+                }}
+                onDragLeave={() => setIsDragging(false)}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  setIsDragging(false);
+                  const dropped = e.dataTransfer.files[0];
+                  if (
+                    dropped?.type.startsWith("video/") ||
+                    dropped?.type === "application/pdf"
+                  ) {
+                    setFile(dropped);
+                    setActiveTab(
+                      dropped.type === "application/pdf" ? "pdf" : "file"
+                    );
+                  } else {
+                    setError("Please upload a video or PDF file.");
+                  }
+                }}
+                onClick={() =>
+                  !file && document.getElementById("file-upload")?.click()
+                }
+              >
+                <input
+                  id="file-upload"
+                  type="file"
+                  accept="video/*"
+                  className="hidden"
+                  onChange={handleFileChange}
+                />
 
-  //             {!uploading && file && activeTab === "file" && (
-  //               <Button
-  //                 className="w-full h-12 mt-4 rounded-lg font-medium"
-  //                 onClick={() => handleUpload(file)}
-  //                 disabled={uploading}
-  //               >
-  //                 {uploading ? (
-  //                   <>
-  //                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-  //                     Uploading...
-  //                   </>
-  //                 ) : (
-  //                   "Upload Video & Process"
-  //                 )}
-  //               </Button>
-  //             )}
-  //           </TabsContent>
+                {file && activeTab === "file" ? (
+                  <div className="flex flex-col items-center justify-center">
+                    <div className="w-16 h-16 bg-blue-100 dark:bg-blue-800/30 rounded-full flex items-center justify-center mb-4">
+                      <CheckCircle2 className="w-8 h-8 text-blue-600 dark:text-blue-400" />
+                    </div>
+                    <h3 className="text-lg font-medium mb-1 text-gray-700 dark:text-gray-200">
+                      Video Selected
+                    </h3>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
+                      {file.name}
+                    </p>
+                    <p className="text-xs text-gray-500 dark:text-gray-500 mb-4">
+                      {getFileSize()}
+                    </p>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        removeFile();
+                      }}
+                      className="rounded-full border-blue-200 dark:border-blue-700 text-blue-600 dark:text-blue-400"
+                    >
+                      <X className="w-4 h-4 mr-2" />
+                      Remove File
+                    </Button>
+                  </div>
+                ) : (
+                  <>
+                    <div className="w-20 h-20 bg-blue-100 dark:bg-blue-800/30 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <UploadIcon className="w-10 h-10 text-blue-600 dark:text-blue-400" />
+                    </div>
+                    <h3 className="text-xl font-medium mb-2 text-gray-700 dark:text-gray-200">
+                      Drag & Drop Video
+                    </h3>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                      or click to browse files
+                    </p>
+                    <p className="text-xs text-gray-500 dark:text-gray-500">
+                      Supports MP4, WebM, MOV and other formats
+                    </p>
+                  </>
+                )}
+              </div>
 
-  //           {/* PDF Upload Tab */}
-  //           <TabsContent value="pdf" className="space-y-4">
-  //             <div
-  //               className={cn(
-  //                 "border-2 border-dashed rounded-xl p-10 text-center transition-all duration-200",
-  //                 isDragging
-  //                   ? "border-primary bg-primary/5"
-  //                   : "border-muted-foreground/20",
-  //                 !file &&
-  //                   "hover:border-primary hover:bg-primary/5 cursor-pointer",
-  //                 file && "bg-muted/20"
-  //               )}
-  //               onDragOver={handleDragOver}
-  //               onDragLeave={handleDragLeave}
-  //               onDrop={handleDrop}
-  //               onClick={() =>
-  //                 !file && document.getElementById("pdf-upload")?.click()
-  //               }
-  //             >
-  //               <input
-  //                 id="pdf-upload"
-  //                 type="file"
-  //                 accept="application/pdf"
-  //                 className="hidden"
-  //                 onChange={handleFileChange}
-  //               />
+              {uploading && activeTab === "file" && (
+                <div className="space-y-3 mt-6">
+                  <div className="flex justify-between text-sm text-gray-600 dark:text-gray-400">
+                    <span>{uploadStatus}</span>
+                    <span>{Math.round(uploadProgress)}%</span>
+                  </div>
+                  <Progress value={uploadProgress} className="h-2" />
+                </div>
+              )}
 
-  //               {file && activeTab === "pdf" ? (
-  //                 <div className="flex flex-col items-center justify-center">
-  //                   <div className="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mb-4">
-  //                     <FileText className="w-8 h-8 text-red-500" />
-  //                   </div>
-  //                   <h3 className="text-lg font-medium mb-1">PDF Selected</h3>
-  //                   <p className="text-sm text-muted-foreground mb-1">
-  //                     {file.name}
-  //                   </p>
-  //                   <p className="text-xs text-muted-foreground/70 mb-4">
-  //                     {getFileSize()}
-  //                   </p>
-  //                   <Button
-  //                     variant="outline"
-  //                     size="sm"
-  //                     onClick={(e) => {
-  //                       e.stopPropagation();
-  //                       removeFile();
-  //                     }}
-  //                     className="rounded-full"
-  //                   >
-  //                     <X className="w-4 h-4 mr-2" />
-  //                     Remove File
-  //                   </Button>
-  //                 </div>
-  //               ) : (
-  //                 <>
-  //                   <div className="w-20 h-20 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-red-500/20 transition-colors">
-  //                     <FileText className="w-10 h-10 text-red-500/70" />
-  //                   </div>
-  //                   <h3 className="text-xl font-medium mb-2">
-  //                     Drag & Drop PDF
-  //                   </h3>
-  //                   <p className="text-sm text-muted-foreground mb-2">
-  //                     or click to browse files
-  //                   </p>
-  //                   <p className="text-xs text-muted-foreground/70">
-  //                     Upload lecture slides, research papers, or textbook
-  //                     chapters
-  //                   </p>
-  //                 </>
-  //               )}
-  //             </div>
+              {!uploading && file && activeTab === "file" && (
+                <Button
+                  className="w-full h-12 mt-4 rounded-lg font-medium bg-blue-600 hover:bg-blue-700 text-white"
+                  onClick={() => handleUpload(file)}
+                  disabled={uploading}
+                >
+                  {uploading ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Uploading...
+                    </>
+                  ) : (
+                    "Upload Video & Process"
+                  )}
+                </Button>
+              )}
+            </TabsContent>
 
-  //             {uploading && activeTab === "pdf" && (
-  //               <div className="space-y-3 mt-6">
-  //                 <div className="space-y-2">
-  //                   <div className="flex justify-between text-sm">
-  //                     <span>{uploadStatus}</span>
-  //                     <span>{Math.round(uploadProgress)}%</span>
-  //                   </div>
-  //                   <Progress value={uploadProgress} className="h-2" />
-  //                 </div>
-  //               </div>
-  //             )}
+            {/* PDF Upload */}
+            <TabsContent value="pdf" className="space-y-4">
+              <div
+                className={cn(
+                  "border-2 border-dashed rounded-xl p-10 text-center transition-colors duration-300",
+                  isDragging
+                    ? "border-blue-600 bg-blue-50 dark:bg-blue-800/20"
+                    : "border-blue-200 dark:border-blue-700",
+                  !file &&
+                    "hover:border-blue-600 hover:bg-blue-50 dark:hover:bg-blue-800/20 cursor-pointer",
+                  file && "bg-blue-50 dark:bg-blue-800/10"
+                )}
+                onClick={() =>
+                  !file && document.getElementById("pdf-upload")?.click()
+                }
+              >
+                <input
+                  id="pdf-upload"
+                  type="file"
+                  accept="application/pdf"
+                  className="hidden"
+                  onChange={handleFileChange}
+                />
 
-  //             {!uploading && file && activeTab === "pdf" && (
-  //               <Button
-  //                 className="w-full h-12 mt-4 rounded-lg font-medium bg-red-500 hover:bg-red-600"
-  //                 onClick={() => handleUpload(file)}
-  //                 disabled={uploading}
-  //               >
-  //                 {uploading ? (
-  //                   <>
-  //                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-  //                     Uploading...
-  //                   </>
-  //                 ) : (
-  //                   "Upload PDF & Process"
-  //                 )}
-  //               </Button>
-  //             )}
-  //           </TabsContent>
+                {file && activeTab === "pdf" ? (
+                  <div className="flex flex-col items-center justify-center">
+                    <div className="w-16 h-16 bg-blue-100 dark:bg-blue-800/30 rounded-full flex items-center justify-center mb-4">
+                      <FileText className="w-8 h-8 text-blue-600 dark:text-blue-400" />
+                    </div>
+                    <h3 className="text-lg font-medium mb-1 text-gray-700 dark:text-gray-200">
+                      PDF Selected
+                    </h3>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
+                      {file.name}
+                    </p>
+                    <p className="text-xs text-gray-500 dark:text-gray-500 mb-4">
+                      {getFileSize()}
+                    </p>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        removeFile();
+                      }}
+                      className="rounded-full border-blue-200 dark:border-blue-700 text-blue-600 dark:text-blue-400"
+                    >
+                      <X className="w-4 h-4 mr-2" />
+                      Remove File
+                    </Button>
+                  </div>
+                ) : (
+                  <>
+                    <div className="w-20 h-20 bg-blue-100 dark:bg-blue-800/30 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <FileText className="w-10 h-10 text-blue-600 dark:text-blue-400" />
+                    </div>
+                    <h3 className="text-xl font-medium mb-2 text-gray-700 dark:text-gray-200">
+                      Drag & Drop PDF
+                    </h3>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                      or click to browse files
+                    </p>
+                    <p className="text-xs text-gray-500 dark:text-gray-500">
+                      Upload lecture slides, research papers, or textbook
+                      chapters
+                    </p>
+                  </>
+                )}
+              </div>
 
-  //           {/* YouTube URL Tab */}
-  //           <TabsContent value="url" className="space-y-6">
-  //             <div className="space-y-4 py-4">
-  //               <div className="flex flex-col items-center justify-center mb-4">
-  //                 <div className="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mb-4">
-  //                   <Youtube className="w-8 h-8 text-red-500" />
-  //                 </div>
-  //                 <h3 className="text-lg font-medium mb-1">YouTube Video</h3>
-  //                 <p className="text-sm text-muted-foreground mb-4 text-center max-w-md">
-  //                   Enter a YouTube URL to process the video lecture
-  //                 </p>
-  //               </div>
+              {uploading && activeTab === "pdf" && (
+                <div className="space-y-3 mt-6">
+                  <div className="flex justify-between text-sm text-gray-600 dark:text-gray-400">
+                    <span>{uploadStatus}</span>
+                    <span>{Math.round(uploadProgress)}%</span>
+                  </div>
+                  <Progress value={uploadProgress} className="h-2" />
+                </div>
+              )}
 
-  //               <div className="relative">
-  //                 <Input
-  //                   type="text"
-  //                   placeholder="https://www.youtube.com/watch?v=..."
-  //                   value={youtubeUrl}
-  //                   onChange={(e) => setYoutubeUrl(e.target.value)}
-  //                   className="w-full pl-10 h-12 rounded-lg"
-  //                 />
-  //                 <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
-  //                   <Youtube className="w-4 h-4 text-muted-foreground" />
-  //                 </div>
-  //               </div>
+              {!uploading && file && activeTab === "pdf" && (
+                <Button
+                  className="w-full h-12 mt-4 rounded-lg font-medium bg-blue-600 hover:bg-blue-700 text-white"
+                  onClick={() => handleUpload(file)}
+                  disabled={uploading}
+                >
+                  {uploading ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Uploading...
+                    </>
+                  ) : (
+                    "Upload PDF & Process"
+                  )}
+                </Button>
+              )}
+            </TabsContent>
 
-  //               {uploading && activeTab === "url" && (
-  //                 <div className="space-y-3 mt-6">
-  //                   <div className="space-y-2">
-  //                     <div className="flex justify-between text-sm">
-  //                       <span>{uploadStatus}</span>
-  //                       <span>{Math.round(uploadProgress)}%</span>
-  //                     </div>
-  //                     <Progress value={uploadProgress} className="h-2" />
-  //                   </div>
-  //                 </div>
-  //               )}
+            {/* YouTube URL */}
+            <TabsContent value="url" className="space-y-6">
+              <div className="space-y-4 py-4">
+                <div className="flex flex-col items-center justify-center mb-4">
+                  <div className="w-16 h-16 bg-blue-100 dark:bg-blue-800/30 rounded-full flex items-center justify-center mb-4">
+                    <Youtube className="w-8 h-8 text-blue-600 dark:text-blue-400" />
+                  </div>
+                  <h3 className="text-lg font-medium mb-1 text-gray-700 dark:text-gray-200">
+                    YouTube Video
+                  </h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    Paste a YouTube link to generate study materials
+                  </p>
+                </div>
 
-  //               <Button
-  //                 className="w-full h-12 rounded-lg font-medium bg-red-500 hover:bg-red-600"
-  //                 onClick={handleYoutubeUrlSubmit}
-  //                 disabled={!youtubeUrl || uploading}
-  //               >
-  //                 {uploading ? (
-  //                   <>
-  //                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-  //                     Processing...
-  //                   </>
-  //                 ) : (
-  //                   "Process YouTube Video"
-  //                 )}
-  //               </Button>
-  //             </div>
-  //           </TabsContent>
-  //         </Tabs>
-  //       </CardContent>
+                <div className="flex gap-3">
+                  <Input
+                    type="url"
+                    placeholder="https://youtube.com/watch?v=..."
+                    value={youtubeUrl}
+                    onChange={(e) => setYoutubeUrl(e.target.value)}
+                    className="flex-1 rounded-lg border-blue-200 dark:border-blue-700"
+                  />
+                  <Button
+                    onClick={handleYoutubeUrlSubmit}
+                    className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg"
+                    disabled={uploading}
+                  >
+                    {uploading ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Processing...
+                      </>
+                    ) : (
+                      "Process"
+                    )}
+                  </Button>
+                </div>
 
-  //       {error && (
-  //         <CardFooter className="p-0">
-  //           <div className="w-full p-4 bg-destructive/10 text-destructive text-sm border-t border-destructive/20 flex items-center">
-  //             <X className="w-4 h-4 mr-2 flex-shrink-0" />
-  //             <p>{error}</p>
-  //           </div>
-  //         </CardFooter>
-  //       )}
-  //     </Card>
-  //   </div>
-  // );
+                {uploading && activeTab === "url" && (
+                  <div className="space-y-3 mt-6">
+                    <div className="flex justify-between text-sm text-gray-600 dark:text-gray-400">
+                      <span>{uploadStatus}</span>
+                      <span>{Math.round(uploadProgress)}%</span>
+                    </div>
+                    <Progress value={uploadProgress} className="h-2" />
+                  </div>
+                )}
+              </div>
+            </TabsContent>
+          </Tabs>
 
-  return(
-    <div className="w-full p-4 space-y-8">
+          {error && (
+            <div className="mt-4 p-3 rounded-lg bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 text-sm">
+              {error}
+            </div>
+          )}
+        </CardContent>
 
-  {/* Video Upload */}
-  <Card className="w-full shadow-lg border-0 overflow-hidden bg-white dark:bg-gray-900">
-    <CardHeader className="bg-blue-600 dark:bg-blue-800 text-white p-6">
-      <CardTitle className="text-2xl font-bold text-center">Upload Video</CardTitle>
-      <CardDescription className="text-white/80 text-center">
-        Drag & drop a video or click to browse. Supports MP4, WebM, MOV, and more.
-      </CardDescription>
-    </CardHeader>
-    <CardContent className="p-6 w-full">
-      <div
-        className={cn(
-          "border-2 border-dashed rounded-xl p-12 text-center transition-all duration-200 w-full",
-          isDragging
-            ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
-            : "border-gray-300 dark:border-gray-700",
-          !file && "hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/10 cursor-pointer",
-          file && "bg-gray-100 dark:bg-gray-800"
-        )}
-        onDragOver={handleDragOver}
-        onDragLeave={handleDragLeave}
-        onDrop={handleDrop}
-        onClick={() => !file && document.getElementById("file-upload")?.click()}
-      >
-        <input
-          id="file-upload"
-          type="file"
-          accept="video/*"
-          className="hidden"
-          onChange={handleFileChange}
-        />
-
-        {file && activeTab === "file" ? (
-          <div className="flex flex-col items-center">
-            <CheckCircle2 className="w-12 h-12 text-blue-600 dark:text-blue-400 mb-2" />
-            <h3 className="text-lg font-medium mb-1 text-gray-800 dark:text-gray-100">{file.name}</h3>
-            <p className="text-sm text-gray-500 dark:text-gray-400">{getFileSize()}</p>
-            <Button variant="outline" size="sm" className="mt-2 hover:scale-105 transition transform" onClick={removeFile}>
-              <X className="w-4 h-4 mr-2" /> Remove Video
-            </Button>
-          </div>
-        ) : (
-          <>
-            <UploadIcon className="w-12 h-12 text-blue-400 mx-auto mb-4" />
-            <p className="font-medium text-gray-800 dark:text-gray-100 mb-1">Drag & Drop Video</p>
-            <p className="text-sm text-gray-500 dark:text-gray-400">or click to browse files</p>
-          </>
-        )}
-      </div>
-      {file && !uploading && (
-        <Button
-          className="w-full mt-4 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium
-                     hover:scale-105 active:scale-95 transition transform duration-300"
-          onClick={() => handleUpload(file)}
-        >
-          Upload & Process Video
-        </Button>
-      )}
-    </CardContent>
-  </Card>
-
-  {/* PDF Upload */}
-  <Card className="w-full shadow-lg border-0 overflow-hidden bg-white dark:bg-gray-900">
-    <CardHeader className="bg-blue-600 dark:bg-blue-800 text-white p-6">
-      <CardTitle className="text-2xl font-bold text-center">Upload PDF</CardTitle>
-      <CardDescription className="text-white/80 text-center">
-        Upload lecture slides, research papers, or textbooks.
-      </CardDescription>
-    </CardHeader>
-    <CardContent className="p-6 flex flex-col md:flex-row gap-6 w-full">
-      <div
-        className="flex-1 border-2 border-dashed rounded-xl p-6 text-center hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/10 cursor-pointer"
-        onClick={() => document.getElementById("pdf-upload")?.click()}
-      >
-        <input
-          id="pdf-upload"
-          type="file"
-          accept="application/pdf"
-          className="hidden"
-          onChange={handleFileChange}
-        />
-        {file && activeTab === "pdf" ? (
-          <>
-            <FileText className="w-12 h-12 text-blue-600 mx-auto mb-2" />
-            <p className="font-medium text-gray-800 dark:text-gray-100">{file.name}</p>
-            <p className="text-sm text-gray-500 dark:text-gray-400">{getFileSize()}</p>
-            <Button variant="outline" size="sm" className="mt-2 hover:scale-105 transition transform" onClick={removeFile}>
-              <X className="w-4 h-4 mr-2" /> Remove PDF
-            </Button>
-          </>
-        ) : (
-          <>
-            <FileText className="w-12 h-12 text-blue-400 mx-auto mb-2" />
-            <p className="text-gray-800 dark:text-gray-100 font-medium">Click to Upload PDF</p>
-          </>
-        )}
-      </div>
-      <div className="flex-1 flex flex-col justify-center">
-        <p className="text-gray-600 dark:text-gray-300 mb-2">Why upload PDF?</p>
-        <ul className="list-disc list-inside text-gray-500 dark:text-gray-400">
-          <li>Lecture slides & notes</li>
-          <li>Research papers</li>
-          <li>Textbook chapters</li>
-        </ul>
-        {file && !uploading && (
-          <Button
-            className="mt-4 w-full bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium
-                       hover:scale-105 active:scale-95 transition transform duration-300"
-            onClick={() => handleUpload(file)}
-          >
-            Upload & Process PDF
-          </Button>
-        )}
-      </div>
-    </CardContent>
-  </Card>
-
-  {/* YouTube URL */}
-  <Card className="w-full shadow-lg border-0 overflow-hidden bg-white dark:bg-gray-900">
-    <CardHeader className="bg-blue-600 dark:bg-blue-800 text-white p-6">
-      <CardTitle className="text-2xl font-bold text-center">YouTube Video</CardTitle>
-      <CardDescription className="text-white/80 text-center">
-        Enter a YouTube URL to process video lectures.
-      </CardDescription>
-    </CardHeader>
-    <CardContent className="p-6 space-y-4 w-full flex flex-col items-center">
-      <div className="flex items-center justify-center flex-col">
-        <Youtube className="w-12 h-12 text-blue-600 dark:text-blue-400 mb-2" />
-        <p className="text-gray-800 dark:text-gray-100 font-medium">YouTube Video URL</p>
-      </div>
-      <Input
-        type="text"
-        placeholder="https://www.youtube.com/watch?v=..."
-        value={youtubeUrl}
-        onChange={(e) => setYoutubeUrl(e.target.value)}
-        className="w-full rounded-lg border border-gray-300 dark:border-gray-700"
-      />
-      <Button
-        className="w-full bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium
-                   hover:scale-105 active:scale-95 transition transform duration-300"
-        onClick={handleYoutubeUrlSubmit}
-      >
-        Process YouTube Video
-      </Button>
-    </CardContent>
-  </Card>
-</div>
-
-  )
+        <CardFooter className="bg-blue-50 dark:bg-blue-800/20 p-4 text-center text-sm text-gray-600 dark:text-gray-400 transition-colors duration-300">
+          Your files are securely processed and never shared.
+        </CardFooter>
+      </Card>
+    </div>
+  );
 }
