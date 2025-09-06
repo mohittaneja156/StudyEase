@@ -28,7 +28,7 @@ export function Navbar() {
             width={50} // reduced size
             height={20}
           />
-          <span className=" text-sm font-bold text-black dark:text-white">
+          <span className="text-sm font-bold text-black dark:text-white ml-1">
     StudyEase <span className="text-blue-600 font-bold">AI</span>
   </span>
         </Link>
